@@ -5,20 +5,21 @@ import 'package:flutter_application_1/views/login.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 
 void main() {
-  runApp(GradingApp());
+  runApp(FarmMarketApp());
 }
 
-class GradingApp extends StatefulWidget {
-  const GradingApp({super.key});
+class FarmMarketApp extends StatefulWidget {
+  const FarmMarketApp({super.key});
 
   @override
-  State<GradingApp> createState() => _GradingAppState();
+  State<FarmMarketApp> createState() => _FarmMarketAppState();
 }
 
-class _GradingAppState extends State<GradingApp> {
+class _FarmMarketAppState extends State<FarmMarketApp> {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      title: 'FarmMarket',
       debugShowCheckedModeBanner: false,
       home: Login(),
       initialRoute: "/",
