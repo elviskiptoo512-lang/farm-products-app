@@ -11,11 +11,11 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   // Sample data for now — replace with real logged-in user data later.
-  final _nameController = TextEditingController(text: 'Jane Wanjiku');
+  final _nameController = TextEditingController(text: 'Elvis Kiptoo');
   final _emailController = TextEditingController(
     text: 'jane.wanjiku@example.com',
   );
-  final _phoneController = TextEditingController(text: '0712 345 678');
+  final _phoneController = TextEditingController(text: '0741034192');
   final _addressController = TextEditingController(
     text: 'Athi River, Machakos County',
   );
