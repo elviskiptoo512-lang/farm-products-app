@@ -13,7 +13,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Sample data for now — replace with real logged-in user data later.
   final _nameController = TextEditingController(text: 'Elvis Kiptoo');
   final _emailController = TextEditingController(
-    text: 'jane.wanjiku@example.com',
+    text: 'elviskiptoo512@gmail.com',
   );
   final _phoneController = TextEditingController(text: '0741034192');
   final _addressController = TextEditingController(
@@ -55,7 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Center(
             child: CircleAvatar(
               radius: 45,
-              backgroundColor: primaryColor.withOpacity(0.15),
+              backgroundColor: primaryColor.withValues(alpha: 0.15),
               child: Icon(Icons.person, size: 50, color: primaryColor),
             ),
           ),

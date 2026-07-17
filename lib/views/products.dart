@@ -50,7 +50,7 @@ class _ProductCard extends StatelessWidget {
           Expanded(
             child: Container(
               width: double.infinity,
-              color: primaryColor.withOpacity(0.1),
+              color: primaryColor.withValues(alpha: 0.1),
               child: Icon(Icons.eco, size: 48, color: primaryColor),
             ),
           ),
