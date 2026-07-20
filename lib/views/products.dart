@@ -3,31 +3,39 @@ import 'package:flutter_application_1/configs/colors.dart';
 import 'package:flutter_application_1/models/product.dart';
 
 class ProductsScreen extends StatelessWidget {
-  const ProductsScreen({super.key});
+  final String? category;
+
+  const ProductsScreen({super.key, this.category});
 
   @override
   Widget build(BuildContext context) {
+    final products = category == null
+        ? dummyProducts
+        : dummyProducts.where((p) => p.category == category).toList();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Products'),
+        title: Text(category ?? 'Products'),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         centerTitle: true,
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(12),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.75,
-        ),
-        itemCount: dummyProducts.length,
-        itemBuilder: (context, index) {
-          final product = dummyProducts[index];
-          return _ProductCard(product: product);
-        },
-      ),
+      body: products.isEmpty
+          ? const Center(child: Text('No products in this category yet'))
+          : GridView.builder(
+              padding: const EdgeInsets.all(12),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final product = products[index];
+                return _ProductCard(product: product);
+              },
+            ),
     );
   }
 }
@@ -46,12 +54,19 @@ class _ProductCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Placeholder image area — swap with real product image later
           Expanded(
             child: Container(
               width: double.infinity,
               color: primaryColor.withValues(alpha: 0.1),
-              child: Icon(Icons.eco, size: 48, color: primaryColor),
+              child: product.imagePath.isEmpty
+                  ? Icon(Icons.eco, size: 48, color: primaryColor)
+                  : Image.asset(
+                      product.imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.eco, size: 48, color: primaryColor);
+                      },
+                    ),
             ),
           ),
           Padding(
@@ -69,11 +84,6 @@ class _ProductCard extends StatelessWidget {
                 Text(
                   'KES ${product.price.toStringAsFixed(0)} / ${product.unit}',
                   style: TextStyle(color: secondaryColor, fontSize: 13),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Stock: ${product.quantity}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),

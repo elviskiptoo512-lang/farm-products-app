@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/configs/colors.dart';
 import 'package:flutter_application_1/models/category.dart';
+import 'package:flutter_application_1/views/products.dart';
+import 'package:get/get.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -41,7 +43,7 @@ class DashboardScreen extends StatelessWidget {
               subtitle: Text('${category.itemCount} items available'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                // Later: navigate to a filtered Products screen for this category
+                Get.to(() => ProductsScreen(category: category.name));
               },
             ),
           );

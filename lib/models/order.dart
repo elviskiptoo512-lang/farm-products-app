@@ -14,7 +14,6 @@ class Order {
   });
 }
 
-// Sample data for now — replace with real data from a backend/database later.
 final List<Order> sampleOrders = [
   Order(
     orderNumber: 'ORD-1001',
