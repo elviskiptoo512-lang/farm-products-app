@@ -10,7 +10,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Sample data for now — replace with real logged-in user data later.
   final _nameController = TextEditingController(text: 'Elvis Kiptoo');
   final _emailController = TextEditingController(
     text: 'elviskiptoo512@gmail.com',
@@ -30,7 +29,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _saveProfile() {
-    // Later: persist changes to a backend/database
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Profile updated')));

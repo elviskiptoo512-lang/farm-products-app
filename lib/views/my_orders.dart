@@ -1,63 +1,63 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/configs/colors.dart';
-import 'package:flutter_application_1/models/order.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:http/http.dart' as http;
 
-class MyOrdersScreen extends StatelessWidget {
+class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Orders'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        centerTitle: true,
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: sampleOrders.length,
-        itemBuilder: (context, index) {
-          final order = sampleOrders[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              title: Text(
-                order.orderNumber,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(_formatDate(order.date)),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _StatusChip(status: order.status),
-                  const SizedBox(height: 4),
-                  Text(
-                    'KES ${order.total.toStringAsFixed(0)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              onTap: () {
-                // Later: navigate to an order detail screen with item breakdown
-              },
-            ),
-          );
-        },
-      ),
-    );
+  State<MyOrdersScreen> createState() => _MyOrdersScreenState();
+}
+
+class _MyOrdersScreenState extends State<MyOrdersScreen> {
+  static const String _ordersUrl = 'http://localhost/FarmMarket/get_orders.php';
+
+  List<dynamic> _orders = [];
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchOrders();
   }
 
-  String _formatDate(DateTime date) {
+  Future<void> _fetchOrders() async {
+    final box = GetStorage();
+    final userEmail = box.read('user_email');
+
+    if (userEmail == null) {
+      setState(() {
+        _isLoading = false;
+        _error = 'Please log in again to view your orders';
+      });
+      return;
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse('$_ordersUrl?user_email=$userEmail'),
+      );
+      final data = jsonDecode(response.body);
+
+      setState(() {
+        _orders = data['success'] == 1 ? data['orders'] : [];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _error = 'Could not reach the server';
+      });
+    }
+  }
+
+  String _formatDate(String unixTimestamp) {
+    final date = DateTime.fromMillisecondsSinceEpoch(
+      int.parse(unixTimestamp) * 1000,
+    );
     const months = [
       'Jan',
       'Feb',
@@ -74,31 +74,123 @@ class MyOrdersScreen extends StatelessWidget {
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Orders'),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        centerTitle: true,
+        actions: [
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _fetchOrders),
+        ],
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+          ? Center(child: Text(_error!))
+          : _orders.isEmpty
+          ? const Center(child: Text('You have no orders yet'))
+          : RefreshIndicator(
+              onRefresh: _fetchOrders,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _orders.length,
+                itemBuilder: (context, index) {
+                  final order = _orders[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ExpansionTile(
+                      title: Text(
+                        'Order #${order['id']}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(_formatDate(order['date_created'])),
+                      trailing: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          _StatusChip(status: order['status']),
+                          const SizedBox(height: 4),
+                          Text(
+                            'KES ${double.parse(order['total']).toStringAsFixed(0)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Payment: ${order['payment_method']}'),
+                              const SizedBox(height: 8),
+                              ...List.generate((order['items'] as List).length, (
+                                i,
+                              ) {
+                                final item = order['items'][i];
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 2,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '${item['product_name']} x${item['quantity']}',
+                                      ),
+                                      Text(
+                                        'KES ${double.parse(item['subtotal']).toStringAsFixed(0)}',
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+    );
+  }
 }
 
 class _StatusChip extends StatelessWidget {
-  final OrderStatus status;
+  final String status;
 
   const _StatusChip({required this.status});
 
   @override
   Widget build(BuildContext context) {
     late Color color;
-    late String label;
 
     switch (status) {
-      case OrderStatus.pending:
+      case 'Pending':
         color = Colors.orange;
-        label = 'Pending';
         break;
-      case OrderStatus.completed:
+      case 'Completed':
         color = Colors.green;
-        label = 'Completed';
         break;
-      case OrderStatus.cancelled:
+      case 'Cancelled':
         color = Colors.red;
-        label = 'Cancelled';
         break;
+      default:
+        color = Colors.grey;
     }
 
     return Container(
@@ -108,7 +200,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
+        status,
         style: TextStyle(
           color: color,
           fontSize: 11,
