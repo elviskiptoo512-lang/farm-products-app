@@ -49,8 +49,11 @@ class _LoginState extends State<Login> {
 
       if (data['success'] == 1) {
         final box = GetStorage();
+        final user = data['user'];
         await box.write('user_email', email);
-        await box.write('user_first_name', data['user']['first name']);
+        await box.write('user_first_name', user['first name']);
+        await box.write('user_last_name', user['last name']);
+        await box.write('user_phone', user['phone']);
         Get.offAllNamed('/home');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
