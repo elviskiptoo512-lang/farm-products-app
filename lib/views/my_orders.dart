@@ -13,6 +13,8 @@ class MyOrdersScreen extends StatefulWidget {
 
 class _MyOrdersScreenState extends State<MyOrdersScreen> {
   static const String _ordersUrl = 'http://localhost/FarmMarket/get_orders.php';
+  static const String _deleteUrl =
+      'http://localhost/FarmMarket/delete_order.php';
 
   List<dynamic> _orders = [];
   bool _isLoading = true;
@@ -51,6 +53,56 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         _isLoading = false;
         _error = 'Could not reach the server';
       });
+    }
+  }
+
+  Future<void> _deleteOrder(int orderId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Order?'),
+        content: const Text('This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final response = await http.get(
+        Uri.parse('$_deleteUrl?order_id=$orderId'),
+      );
+      final data = jsonDecode(response.body);
+
+      if (data['success'] == 1) {
+        _fetchOrders();
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Order deleted')));
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not delete order')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not reach the server')),
+        );
+      }
     }
   }
 
@@ -157,6 +209,24 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
                                   ),
                                 );
                               }),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton.icon(
+                                  onPressed: () => _deleteOrder(
+                                    int.parse(order['id'].toString()),
+                                  ),
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                    size: 18,
+                                  ),
+                                  label: const Text(
+                                    'Delete Order',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
