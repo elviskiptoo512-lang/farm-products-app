@@ -12,6 +12,17 @@ class Product {
     required this.category,
     this.imagePath = '',
   });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      name: json['name'],
+      price: double.parse(json['price'].toString()),
+      unit: json['unit'],
+      category: json['category'],
+      imagePath:
+          'http://localhost/FarmMarket/product_images/${json['image_filename']}',
+    );
+  }
 }
 
 final List<Product> dummyProducts = const [
